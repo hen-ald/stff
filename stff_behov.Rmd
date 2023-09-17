@@ -1,0 +1,194 @@
+---
+title: "Stff behovsanalys"
+author: "corrydor AB"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+library(tidyverse)
+library(openxlsx)
+library(plotly)
+library(dplyr)
+options(scipen=999)
+
+df <- read.xlsx("Book (3).xlsx") #C:\corrydor\stff\stff_corrydor
+#glimpse(df)
+
+df$behov_av_timmar <- df$`Behovtimmar` - df$`Befintligtid` #skapar ny variabel
+df$behov_yta_fullstor_11_spel <- df$Behovtimmar / 44 - df$`Befintligytafullstor11-spelarplan`
+df$behov_per_capita_2022 <- df$behov_yta_fullstor_11_spel / df$`Befolkning.7-20.år.2022`
+df$capita_per_behov_2022 <- df$`Befolkning.7-20.år.2022` / df$behov_yta_fullstor_11_spel
+df$nyckeltal_2022 <- df$`Befolkning.7-20.år.2022` / df$`Behovyta+befintligyta`
+df$nyckeltal_2070 <- df$`Befolkning.7-20.år.2070` / df$`Behovyta+befintligyta`
+df$lag_per_capita <- df$Summalag / df$`Befolkning.7-20.år.2022`
+df$capita_per_lag <- df$`Befolkning.7-20.år.2022` / df$Summalag
+df$behov_timmar_per_capita <- df$Behovtimmar / df$`Befolkning.7-20.år.2022`
+
+#view(df)
+
+df$behov_yta_fullstor_11_spel <- round(df$behov_yta_fullstor_11_spel,2)
+df$nyckeltal_2022 <- round(df$nyckeltal_2022, 0)
+df$nyckeltal_2070 <- round(df$nyckeltal_2070, 0)
+df$lag_per_capita <- round(df$lag_per_capita, 3)
+df$behov_per_capita_2022 <- round(df$behov_per_capita_2022, 6)
+df$behov_timmar_per_capita <- round(df$behov_timmar_per_capita, 3)
+
+#view(df)
+
+# df_sel <- df %>% 
+#   select("Kommun",
+#          # "5x5" = "5mot5",
+#          # "7x7" = "7mot7",
+#          # "9x9" = "9mot912-13år",
+#          # "11x11(14-15)" = "11mot1114-15år",
+#          # "11x11(16-S)" = "11mot1116år-senior",
+#          # "H6-7_D3-5" = "Herr6-7Dam3-5",
+#          # "Res_Vet" = "Reserv-oveteranlag",
+#          # "F_skola" = "Fotbolls-skola",
+#          "Summalag",
+#          "behov_h" = "Behovtimmar",
+#          "befintlig_h" = "Befintligtid",
+#          "befintlig_yta" = "Befintligytafullstor11-spelarplan",
+#          "behov+befintlig_yta" = "Behovyta+befintligyta",
+#          "bef_7-20ar_2022" = "Befolkning.7-20.år.2022",
+#          "bef_7-20ar_2070" = "Befolkning.7-20.år.2070",
+#          "behov_h-befintlig_h" = "behov_av_timmar",
+#          "behov_yta" = "behov_yta_fullstor_11_spel",
+#          "behov_yta_capita" = "behov_per_capita_2022",
+#          "behov_h_capita" = "behov_timmar_per_capita",
+#          "nyckeltal_2022"
+#          ) %>% 
+#   arrange(desc(behov_yta))
+# 
+# #view(df_sel)
+# 
+# #df_sel <- as.data.frame(t(df_sel)) 
+# #view(df_final)
+  
+
+```
+
+### Antal lag per kommun i distriktet
+
+
+```{r df, echo=FALSE, message = FALSE}
+graf_stff_summalag <- df %>% 
+  ggplot(aes(
+    x = reorder(Kommun, Summalag),
+    y = Summalag, fill = Kommun
+  )) +
+  geom_col()+
+  coord_flip() +
+  geom_text(aes(label = Summalag), vjust = 0.5)+
+  theme(legend.position="none")
+
+graf_stff_summalag
+```
+
+### Behov av yta fullstor 11-spelarplan per kommun
+
+
+```{r pressure, echo=FALSE, warning=FALSE, message = FALSE}
+graf_stff_behovytafullstor <- df %>% 
+  ggplot(aes(
+    x = reorder(Kommun, behov_yta_fullstor_11_spel),
+    y = behov_yta_fullstor_11_spel, fill = Kommun
+  )) +
+  geom_col()+
+  coord_flip()+
+  theme(legend.position="none")
+
+graf_stff_behovytafullstor
+```
+
+### Linjärt samband mellan antal lag i en kommun och behov av fler planer
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+punkter_stff_behov_summalag <- df %>% 
+  ggplot(aes(y = Summalag,
+             x = behov_yta_fullstor_11_spel)) +
+  geom_point(aes(size = behov_per_capita_2022, color = Kommun))+
+  #geom_text(aes(label = Kommun), vjust = -3, size = 2 )+
+  geom_smooth()+
+  theme(legend.position="none")
+
+ggplotly(punkter_stff_behov_summalag)
+```
+
+### Antal lag per capita (personer 7 - 20 år)
+
+```{r, echo=FALSE, warning=FALSE, message = FALSE}
+graf_stff_lag_per_capita <- df %>% 
+  ggplot(aes(
+    x = reorder(Kommun, lag_per_capita),
+    y = lag_per_capita, fill = Kommun
+  )) +
+  geom_col()+
+  coord_flip()+
+  theme(legend.position="none")
+graf_stff_lag_per_capita
+
+
+```
+
+### Behov yta fullstor 11-spelarplan per capita (personer 7 - 20 år)
+
+```{r, echo = FALSE, warning=FALSE, message = FALSE}
+graf_stff_behov_per_capita <- df %>% 
+  ggplot(aes(
+    x = reorder(Kommun, behov_per_capita_2022),
+    y = behov_per_capita_2022, fill = Kommun
+  )) +
+  geom_col()+
+  coord_flip()+
+  theme(legend.position="none")
+graf_stff_behov_per_capita
+```
+
+### Nyckeltalet räknas ut genom att befolkningen delas med antalet befintliga fotbollsplaner tillsammans med behovet av fotbollsplaner enligt StFF.
+
+#### Befolkningen (7 - 20 år) / (befintliga + behovet av fotbollsplaner) = nyckeltalet
+
+```{r, echo = FALSE, warning=FALSE, message = FALSE}
+graf_stff_nyckeltal2022 <- df %>% 
+  ggplot(aes(
+    x = reorder(Kommun, nyckeltal_2022),
+    y = nyckeltal_2022,fill = Kommun
+  )) +
+  geom_col()+
+  coord_flip()+
+  theme(legend.position="none")
+graf_stff_nyckeltal2022
+```
+
+### Negativt linjärt samband mellan lag per capita och nyckeltal
+
+#### Storleken på cirklarna är behov per capita
+
+```{r, echo = FALSE, warning=FALSE, message = FALSE}
+punkter_stff_nyckeltal_lagpercapita <- df %>% 
+  ggplot(aes(y = lag_per_capita,
+             x = nyckeltal_2022)) +
+  geom_point(aes(size = df$behov_yta_fullstor_11_spel, color = Kommun))+
+  #geom_text(aes(label = Kommun), vjust = -3, size = 2 )+
+  geom_smooth(method = NULL, formula = NULL)+
+  theme(legend.position="none")
+
+ggplotly(punkter_stff_nyckeltal_lagpercapita)
+```
+
+```{r, echo = FALSE, warning=FALSE, message = FALSE}
+punkter_stff_behovpercapita_lagpercapita <- df %>% 
+  ggplot(aes(y = lag_per_capita,
+             x = behov_per_capita_2022)) +
+  geom_point(aes(size = behov_yta_fullstor_11_spel, color = Kommun))+
+  #geom_text(aes(label = Kommun), vjust = -3, size = 2 )+
+  geom_smooth(method = NULL, formula = NULL)+
+  theme(legend.position="none")
+
+ggplotly(punkter_stff_behovpercapita_lagpercapita)
+
+```
+
