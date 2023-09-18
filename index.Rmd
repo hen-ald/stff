@@ -90,7 +90,7 @@ graf_stff_summalag <- df %>%
        x = "Kommun")
 # title, "",
 #        subtitle = "",
-ggplotly(graf_stff_summalag)
+ggplotly(graf_stff_summalag, tooltip = FALSE) # tar bort tooltips!
 ```
 
 ### Befolkning 7-20 år (2022)
