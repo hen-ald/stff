@@ -6,6 +6,8 @@ library(openxlsx)
 library(plotly) 
 #options(scipen=999)
 
+# här lägger jag till lite text, helt i onödan
+
 df <- read.xlsx("Book (3).xlsx") #C:\corrydor\stff\stff_corrydor
 glimpse(df)
 
