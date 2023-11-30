@@ -3,7 +3,7 @@ install.packages("openxlsx")
 
 library(tidyverse)
 library(openxlsx)
-library(plotly)
+library(plotly) 
 #options(scipen=999)
 
 df <- read.xlsx("Book (3).xlsx") #C:\corrydor\stff\stff_corrydor
